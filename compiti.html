@@ -144,11 +144,19 @@ fetch(sheetUrl)
         const list = document.getElementById('task-list');
 
         data.forEach(item => {
-            // Controlla Attivo = "si" e data raggiunta
-            if(item.Attivo && item.Attivo.toLowerCase() === 'si' && item.Data && new Date(item.Data) <= today) {
-                const li = document.createElement('li');
-                li.innerHTML = `<a href="${item.Link}" target="_blank">${item.Compito}</a>`;
-                list.appendChild(li);
+            const attivo = item["Attivo"];
+            const dataPub = item["Data pubblicazione"]; // attenzione al nome con spazio
+        
+            if(attivo && attivo.toLowerCase() === "si" && dataPub) {
+                // Trasforma "Date(2025,11,14)" in oggetto Date
+                const dateParts = dataPub.match(/\d+/g); // estrae numeri
+                const itemDate = new Date(dateParts[0], dateParts[1], dateParts[2]);
+        
+                if(itemDate <= new Date()) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${item["Link Blooket"]}" target="_blank">${item["Compito"]}</a>`;
+                    list.appendChild(li);
+                }
             }
         });
     })
@@ -161,3 +169,4 @@ fetch(sheetUrl)
 
 </body>
 </html>
+
