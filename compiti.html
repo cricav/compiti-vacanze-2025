@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compiti delle Vacanze 🎄</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+    body {
+        font-family: 'Comic Neue', cursive;
+        background: linear-gradient(to bottom, #fffae3, #fff0f5);
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        text-align: center;
+        padding: 2rem;
+        background-color: #ff4d6d;
+        color: white;
+        font-size: 2rem;
+        border-bottom: 5px dashed #fff;
+    }
+
+    .tabs {
+        display: flex;
+        justify-content: center;
+        margin: 1rem 0;
+    }
+
+    .tab-button {
+        padding: 1rem 2rem;
+        margin: 0 0.5rem;
+        cursor: pointer;
+        border: none;
+        background-color: #ffcc00;
+        border-radius: 12px;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .tab-button:hover {
+        background-color: #ff9900;
+    }
+
+    .tab-content {
+        display: none;
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    li {
+        background: #fff8dc;
+        margin: 0.5rem auto;
+        padding: 1rem;
+        max-width: 400px;
+        border-radius: 15px;
+        box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+        position: relative;
+        transition: transform 0.2s;
+    }
+
+    li:hover {
+        transform: scale(1.05);
+    }
+
+    a {
+        text-decoration: none;
+        color: #d40000;
+        font-weight: bold;
+    }
+
+    .rank {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+</head>
+<body>
+
+<header>Compiti delle Vacanze 🎄✨</header>
+
+<div class="tabs">
+    <button class="tab-button" onclick="showTab('links')">Link Blooket</button>
+    <button class="tab-button" onclick="showTab('ranking')">Classifica</button>
+</div>
+
+<div id="links" class="tab-content">
+    <ul id="task-list"></ul>
+</div>
+
+<div id="ranking" class="tab-content">
+    <div class="rank">
+        La classifica sarà disponibile qui!
+    </div>
+</div>
+
+<script>
+const sheetUrl = 'https://docs.google.com/spreadsheets/d/18vUCCRRAsrxyldgABKLETmfQ7lSyreFZKm7J5C_yKs8/gviz/tq?tqx=out:json&sheet=Link';
+
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Mostra il primo tab di default
+showTab('links');
+
+// Funzione per convertire JSON di Google Sheet in array leggibile
+function parseGoogleSheetJSON(jsonText) {
+    const json = JSON.parse(jsonText.replace(/^.*?\(/,'').slice(0,-2));
+    const cols = json.table.cols.map(c => c.label);
+    return json.table.rows.map(row => {
+        let obj = {};
+        row.c.forEach((cell, i) => {
+            obj[cols[i]] = cell ? cell.v : '';
+        });
+        return obj;
+    });
+}
+
+fetch(sheetUrl)
+    .then(res => res.text())
+    .then(text => {
+        const data = parseGoogleSheetJSON(text);
+        const today = new Date();
+        const list = document.getElementById('task-list');
+
+        data.forEach(item => {
+            // Controlla se il flag è "si" e la data raggiunta
+            if(item.Flag.toLowerCase() === 'si' && new Date(item.Data) <= today) {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${item.Link}" target="_blank">${item.Compito}</a>`;
+                list.appendChild(li);
+            }
+        });
+    })
+    .catch(err => {
+        console.error('Errore nel caricamento dei dati:', err);
+    });
+</script>
+
+</body>
+</html>
