@@ -120,7 +120,9 @@ showTab('links');
 
 // Funzione per convertire JSON di Google Sheet in array leggibile
 function parseGoogleSheetJSON(jsonText) {
-    const json = JSON.parse(jsonText.replace(/^.*?\(/,'').slice(0,-2));
+    // Rimuove wrapper e commenti
+    const jsonStr = jsonText.replace(/^[^\(]*\(/, '').replace(/\);$/, '');
+    const json = JSON.parse(jsonStr);
     const cols = json.table.cols.map(c => c.label);
     return json.table.rows.map(row => {
         let obj = {};
@@ -131,6 +133,7 @@ function parseGoogleSheetJSON(jsonText) {
     });
 }
 
+// Caricamento dati dal Google Sheet
 fetch(sheetUrl)
     .then(res => res.text())
     .then(text => {
@@ -139,8 +142,8 @@ fetch(sheetUrl)
         const list = document.getElementById('task-list');
 
         data.forEach(item => {
-            // Controlla se il flag è "si" e la data raggiunta
-            if(item.Flag.toLowerCase() === 'si' && new Date(item.Data) <= today) {
+            // Controlla flag = "si" e data raggiunta
+            if(item.Flag && item.Flag.toLowerCase() === 'si' && item.Data && new Date(item.Data) <= today) {
                 const li = document.createElement('li');
                 li.innerHTML = `<a href="${item.Link}" target="_blank">${item.Compito}</a>`;
                 list.appendChild(li);
@@ -149,6 +152,8 @@ fetch(sheetUrl)
     })
     .catch(err => {
         console.error('Errore nel caricamento dei dati:', err);
+        const list = document.getElementById('task-list');
+        list.innerHTML = "<li>Impossibile caricare i compiti. Controlla il link del foglio.</li>";
     });
 </script>
 
