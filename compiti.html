@@ -84,23 +84,6 @@
         font-size: 1.5rem;
         margin-bottom: 1rem;
     }
-
-    /* Fiocchi di neve natalizi */
-    .snowflake {
-        position: fixed;
-        top: -10px;
-        color: #fff;
-        font-size: 1rem;
-        user-select: none;
-        z-index: 9999;
-        pointer-events: none;
-        animation: fall linear infinite;
-    }
-
-    @keyframes fall {
-        0% { transform: translateY(0) rotate(0deg); }
-        100% { transform: translateY(100vh) rotate(360deg); }
-    }
 </style>
 </head>
 <body>
@@ -123,35 +106,31 @@
 </div>
 
 <script>
-// Tab
-function showTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-}
-showTab('links');
-
-// Foglio Google
 const sheetUrl = 'https://docs.google.com/spreadsheets/d/18vUCCRRAsrxyldgABKLETmfQ7lSyreFZKm7J5C_yKs8/gviz/tq?tqx=out:json&sheet=Link';
 
-// Parsing JSON Google Sheets
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Mostra il primo tab di default
+showTab('links');
+
+// Funzione per convertire JSON di Google Sheet in array leggibile
 function parseGoogleSheetJSON(jsonText) {
-    const json = JSON.parse(jsonText.replace(/^[^\(]*\(/,'').slice(0,-2));
+    const json = JSON.parse(jsonText.replace(/^.*?\(/,'').slice(0,-2));
     const cols = json.table.cols.map(c => c.label);
     return json.table.rows.map(row => {
         let obj = {};
         row.c.forEach((cell, i) => {
-            if(cell && cell.v && typeof cell.v === 'string' && cell.v.startsWith('Date(')) {
-                const m = cell.v.match(/Date\((\d+),(\d+),(\d+)\)/);
-                obj[cols[i]] = m ? new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3])) : null;
-            } else {
-                obj[cols[i]] = cell ? cell.v : '';
-            }
+            obj[cols[i]] = cell ? cell.v : '';
         });
         return obj;
     });
 }
 
-// Caricamento dati
 fetch(sheetUrl)
     .then(res => res.text())
     .then(text => {
@@ -160,27 +139,17 @@ fetch(sheetUrl)
         const list = document.getElementById('task-list');
 
         data.forEach(item => {
-            if(item.Attivo.toLowerCase() === 'si' && item['Data pubblicazione'] <= today) {
+            // Controlla se il flag è "si" e la data raggiunta
+            if(item.Flag.toLowerCase() === 'si' && new Date(item.Data) <= today) {
                 const li = document.createElement('li');
-                li.innerHTML = `<a href="${item['Link Blooket']}" target="_blank">${item.Compito}</a>`;
+                li.innerHTML = `<a href="${item.Link}" target="_blank">${item.Compito}</a>`;
                 list.appendChild(li);
             }
         });
     })
-    .catch(err => console.error('Errore nel caricamento dei dati:', err));
-
-// Fiocchi di neve natalizi
-function createSnowflake() {
-    const snowflake = document.createElement('div');
-    snowflake.classList.add('snowflake');
-    snowflake.style.left = Math.random() * window.innerWidth + 'px';
-    snowflake.style.fontSize = (Math.random() * 15 + 10) + 'px';
-    snowflake.style.animationDuration = (Math.random() * 5 + 5) + 's';
-    snowflake.innerHTML = '❄';
-    document.body.appendChild(snowflake);
-    setTimeout(() => snowflake.remove(), 10000);
-}
-setInterval(createSnowflake, 300);
+    .catch(err => {
+        console.error('Errore nel caricamento dei dati:', err);
+    });
 </script>
 
 </body>
