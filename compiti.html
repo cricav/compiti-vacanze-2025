@@ -118,11 +118,13 @@ function showTab(tabId) {
 // Mostra il primo tab di default
 showTab('links');
 
-// Funzione per convertire JSON di Google Sheet in array leggibile
+// Funzione per convertire JSON di Google Sheet in array leggibile senza regex
 function parseGoogleSheetJSON(jsonText) {
-    // Rimuove wrapper e commenti
-    const jsonStr = jsonText.replace(/^[^\(]*\(/, '').replace(/\);$/, '');
+    const start = jsonText.indexOf('{');
+    const end = jsonText.lastIndexOf('}');
+    const jsonStr = jsonText.substring(start, end + 1);
     const json = JSON.parse(jsonStr);
+
     const cols = json.table.cols.map(c => c.label);
     return json.table.rows.map(row => {
         let obj = {};
