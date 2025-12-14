@@ -144,8 +144,8 @@ fetch(sheetUrl)
         const list = document.getElementById('task-list');
 
         data.forEach(item => {
-            // Controlla flag = "si" e data raggiunta
-            if(item.Flag && item.Flag.toLowerCase() === 'si' && item.Data && new Date(item.Data) <= today) {
+            // Controlla Attivo = "si" e data raggiunta
+            if(item.Attivo && item.Attivo.toLowerCase() === 'si' && item.Data && new Date(item.Data) <= today) {
                 const li = document.createElement('li');
                 li.innerHTML = `<a href="${item.Link}" target="_blank">${item.Compito}</a>`;
                 list.appendChild(li);
