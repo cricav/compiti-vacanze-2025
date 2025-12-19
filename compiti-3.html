@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Compiti delle Vacanze 🎄</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+
+body {
+    font-family: 'Comic Neue', cursive;
+    background: linear-gradient(#fff7e6, #ffeef2);
+    margin: 0;
+    overflow-x: hidden;
+}
+
+header {
+    background: #e63946;
+    color: white;
+    text-align: center;
+    padding: 25px;
+    font-size: 2rem;
+    border-bottom: 6px dashed white;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+button {
+    background: #ffd166;
+    border: none;
+    padding: 12px 22px;
+    margin: 0 6px;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #f4a261;
+}
+
+.tab {
+    display: none;
+    text-align: center;
+    padding: 15px;
+}
+
+.tab.active {
+    display: block;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background: #fff;
+    margin: 10px auto;
+    padding: 15px;
+    max-width: 450px;
+    border-radius: 18px;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+}
+
+li:hover {
+    transform: scale(1.05);
+}
+
+.locked {
+    opacity: 0.6;
+}
+
+a {
+    color: #1d3557;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.first {
+    background: #fff3b0;
+    border: 3px solid gold;
+}
+
+.video-wrapper {
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+.video-wrapper iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    border: none;
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.2);
+}
+</style>
+</head>
+
+<body>
+
+<header>🎄 Compiti delle Vacanze 🎅</header>
+
+<div class="tabs">
+    <button onclick="showTab('compiti')">📘 Compiti</button>
+    <button onclick="showTab('classifica')">🏆 Classifica</button>
+    <button onclick="showTab('passatempo')">🎬 Passatempo</button>
+</div>
+
+<div id="compiti" class="tab active">
+    <ul id="lista-compiti"></ul>
+</div>
+
+<div id="classifica" class="tab">
+    <ul id="lista-classifica"></ul>
+</div>
+
+<div id="passatempo" class="tab">
+    <h2>🎬 Video per rilassarsi</h2>
+
+    <div class="video-wrapper">
+        <iframe
+            src="https://www.youtube.com/embed/5O83S_mMKO8"
+            title="Video YouTube"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <div class="video-wrapper">
+        <iframe
+            src="https://www.youtube.com/embed/-Roba3r5v6s"
+            title="Video YouTube"
+            allowfullscreen>
+        </iframe>
+    </div>
+
+    <div class="video-wrapper">
+        <iframe
+            src="https://www.youtube.com/embed/Na9VmMNJvsA"
+            title="Video YouTube"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+
+<!-- ❄️ NEVE -->
+<canvas id="snow"></canvas>
+
+<script>
+const LINK_URL =
+'https://docs.google.com/spreadsheets/d/18vUCCRRAsrxyldgABKLETmfQ7lSyreFZKm7J5C_yKs8/gviz/tq?tqx=out:json&sheet=Link';
+
+const CLASSIFICA_URL =
+'https://docs.google.com/spreadsheets/d/18vUCCRRAsrxyldgABKLETmfQ7lSyreFZKm7J5C_yKs8/gviz/tq?tqx=out:json&sheet=Classifica';
+
+// ---------------- TAB ----------------
+function showTab(id) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// ---------------- GOOGLE PARSER ----------------
+function parseGoogle(text) {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    const json = JSON.parse(text.substring(start, end + 1));
+    const headers = json.table.cols.map(c => c.label);
+
+    return json.table.rows.map(r => {
+        const obj = {};
+        r.c.forEach((cell, i) => obj[headers[i]] = cell ? cell.v : null);
+        return obj;
+    });
+}
+
+// ---------------- DATE ----------------
+function parseGoogleDate(str) {
+    if (!str) return null;
+    const p = str.replace('Date(', '').replace(')', '').split(',');
+    return new Date(p[0], p[1], p[2]);
+}
+
+// ---------------- COMPITI ----------------
+fetch(LINK_URL)
+.then(r => r.text())
+.then(t => {
+    const data = parseGoogle(t);
+    const ul = document.getElementById('lista-compiti');
+    const today = new Date();
+    let unlocked = false;
+
+    data.forEach(item => {
+        if (item["Attivo"]?.toLowerCase() !== "si") return;
+
+        const date = parseGoogleDate(item["Data pubblicazione"]);
+        const li = document.createElement('li');
+
+        if (date && date <= today) {
+            unlocked = true;
+            li.innerHTML = `🎮 <a href="${item["Link Blooket"]}" target="_blank">${item["Compito"]}</a>`;
+        } else {
+            li.classList.add('locked');
+            li.innerHTML = `🔒 ${item["Compito"]}<br><small>Sbloccato dal ${date.toLocaleDateString()}</small>`;
+        }
+        ul.appendChild(li);
+    });
+
+    if (unlocked) alert("🎉 Nuovo compito sbloccato!");
+});
+
+// ---------------- CLASSIFICA ----------------
+fetch(CLASSIFICA_URL)
+.then(r => r.text())
+.then(t => {
+    const data = parseGoogle(t);
+    const ul = document.getElementById('lista-classifica');
+
+    data.sort((a,b) => a["Posizione"] - b["Posizione"]);
+
+    data.forEach(r => {
+        const li = document.createElement('li');
+        if (r["Posizione"] === 1) li.classList.add('first');
+
+        li.innerHTML = `
+            🏅 <strong>${r["Posizione"]}°</strong> - ${r["Studente"]}
+            <br>⭐ ${r["Punteggio"]} punti
+            <br><em>${r["Messaggio"] || ""}</em>
+        `;
+        ul.appendChild(li);
+    });
+});
+
+// ---------------- NEVE ----------------
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const flakes = Array.from({length: 80}, () => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*3+1,
+    d: Math.random()*1+1
+}));
+
+function snow() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    flakes.forEach(f => {
+        ctx.moveTo(f.x,f.y);
+        ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    });
+    ctx.fill();
+    flakes.forEach(f => {
+        f.y += f.d;
+        if (f.y > canvas.height) {
+            f.y = 0;
+            f.x = Math.random()*canvas.width;
+        }
+    });
+    requestAnimationFrame(snow);
+}
+snow();
+</script>
+
+</body>
+</html>
